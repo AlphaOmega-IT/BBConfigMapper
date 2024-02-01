@@ -52,10 +52,10 @@ public class ConfigMapper implements IConfigMapper {
    * @param converterRegistry Optional registry of custom value converters
    */
   public ConfigMapper(
-    IConfig config,
-    Logger logger,
-    IExpressionEvaluator evaluator,
-    @Nullable IValueConverterRegistry converterRegistry
+    final IConfig config,
+    final Logger logger,
+    final IExpressionEvaluator evaluator,
+    final @Nullable IValueConverterRegistry converterRegistry
   ) {
     this.config = config;
     this.logger = logger;
@@ -65,11 +65,14 @@ public class ConfigMapper implements IConfigMapper {
 
   @Override
   public IConfig getConfig() {
-    return config;
+    return this.config;
   }
 
   @Override
-  public <T extends IConfigSection> T mapSection(@Nullable String root, Class<T> type) throws Exception {
+  public <T extends IConfigSection> T mapSection(
+		final @Nullable String root,
+		final Class<T> type
+	) throws Exception {
     logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "At the entry point of mapping path=" + root + " to type=" + type);
     return mapSectionSub(root, null, type);
   }
@@ -86,7 +89,11 @@ public class ConfigMapper implements IConfigMapper {
    * @param type Class of the config section to instantiate
    * @return Instantiated class with mapped fields
    */
-  private <T extends IConfigSection> T mapSectionSub(@Nullable String root, @Nullable Map<?, ?> source, Class<T> type) throws Exception {
+  private <T extends IConfigSection> T mapSectionSub(
+		final @Nullable String root,
+		final @Nullable Map<?, ?> source,
+		final Class<T> type
+	) throws Exception {
       logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "At the subroutine of mapping path=" + root + " to type=" + type + " using source=" + source);
       T instance = findDefaultConstructor(type).newInstance();
 
@@ -115,9 +122,9 @@ public class ConfigMapper implements IConfigMapper {
           }
 
           FValueConverter converter = null;
-          if (converterRegistry != null) {
-            Class<?> requiredType = converterRegistry.getRequiredTypeFor(fieldType);
-            converter = converterRegistry.getConverterFor(fieldType);
+          if (this.converterRegistry != null) {
+            Class<?> requiredType = this.converterRegistry.getRequiredTypeFor(fieldType);
+            converter = this.converterRegistry.getConverterFor(fieldType);
 
             if (requiredType != null && converter != null) {
               logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "Using custom converter for type=" + finalFieldType);
@@ -160,7 +167,9 @@ public class ConfigMapper implements IConfigMapper {
    * @return A tuple containing the unsorted list as well as an iterator of fields in
    *         the order that fields of type Object come after known types
    */
-  private Tuple<List<Field>, Iterator<Field>> findApplicableFields(Class<?> type) {
+  private Tuple<List<Field>, Iterator<Field>> findApplicableFields(
+		final Class<?> type
+	) {
     List<Field> affectedFields = new ArrayList<>();
 
     // Walk the class' hierarchy
@@ -201,7 +210,10 @@ public class ConfigMapper implements IConfigMapper {
    * @param source Map to resolve from instead of querying the config, optional
    * @return Resolved value, null if either the value was null or if it wasn't available
    */
-  private @Nullable Object resolvePath(String path, @Nullable Map<?, ?> source) {
+  private @Nullable Object resolvePath(
+		String path,
+		@Nullable Map<?, ?> source
+	) {
     // No object to look in specified, retrieve this path from the config
     if (source == null) {
       logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "No resolving source provided, looking up in config");
@@ -212,10 +224,10 @@ public class ConfigMapper implements IConfigMapper {
 
     int dotIndex = path.indexOf('.');
 
-    while (path.length() > 0) {
+    while (! path.isEmpty()) {
       String key = dotIndex < 0 ? path : path.substring(0, dotIndex);
 
-      if (StringUtils.isBlank(key))
+      if (key.isBlank())
         throw new MappingError("Cannot resolve a blank key");
 
       path = dotIndex < 0 ? "" : path.substring(dotIndex + 1);
@@ -224,7 +236,7 @@ public class ConfigMapper implements IConfigMapper {
       Object value = source.get(key);
 
       // Last iteration, respond with the current value
-      if (path.length() == 0) {
+      if (path.isEmpty()) {
         logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "Walk ended, returning value=" + value);
         return value;
       }
@@ -250,7 +262,10 @@ public class ConfigMapper implements IConfigMapper {
    * @param input Input object to convert
    * @param type Type to convert to
    */
-  private @Nullable Object convertType(@Nullable Object input, Class<?> type) throws Exception {
+  private @Nullable Object convertType(
+		@Nullable Object input,
+		Class<?> type
+	) throws Exception {
 
     Class<?> finalType = type;
     logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "Trying to convert a value to type: " + finalType);
@@ -261,9 +276,9 @@ public class ConfigMapper implements IConfigMapper {
     }
 
     FValueConverter converter = null;
-    if (converterRegistry != null) {
-      Class<?> requiredType = converterRegistry.getRequiredTypeFor(type);
-      converter = converterRegistry.getConverterFor(type);
+    if (this.converterRegistry != null) {
+      Class<?> requiredType = this.converterRegistry.getRequiredTypeFor(type);
+      converter = this.converterRegistry.getConverterFor(type);
 
       if (requiredType != null && converter != null) {
         logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "Using custom converter for type=" + finalType);
@@ -275,7 +290,7 @@ public class ConfigMapper implements IConfigMapper {
     // Requested plain object
     if (type == Object.class) {
       if (converter != null)
-        input = converter.apply(input, evaluator);
+        input = converter.apply(input, this.evaluator);
 
       return input;
     }
@@ -283,7 +298,7 @@ public class ConfigMapper implements IConfigMapper {
     if (IConfigSection.class.isAssignableFrom(type)) {
       logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "Parsing value as config-section");
 
-      if (!(input instanceof Map)) {
+      if (!(input instanceof Map<?, ?>)) {
         logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "Value was null, falling back on empty section");
         input = new HashMap<>();
       }
@@ -332,7 +347,10 @@ public class ConfigMapper implements IConfigMapper {
    * @param value Previously looked up value
    * @return Value to assign to the field
    */
-  private Object handleResolveMapField(Field f, Object value) throws Exception {
+  private Object handleResolveMapField(
+		final Field f,
+		final Object value
+	) throws Exception {
     logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "Resolving map field");
 
     List<Class<?>> genericTypes = getGenericTypes(f);
@@ -340,25 +358,29 @@ public class ConfigMapper implements IConfigMapper {
 
     Map<Object, Object> result = new HashMap<>();
 
-    if (!(value instanceof Map)) {
+    if (!(value instanceof Map<?, ?> mapValue)) {
       logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "Not a map, returning empty map");
       return result;
     }
 
     logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "Mapping values individually");
 
-    for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
-      Object resultKey;
+    for (
+			final Map.Entry<?, ?> entry : mapValue.entrySet()
+		) {
+      final Object resultKey;
+
       try {
-        resultKey = convertType(entry.getKey(), genericTypes.get(0));
-      } catch (MappingError error) {
+        resultKey = this.convertType(entry.getKey(), genericTypes.get(0));
+      } catch (final MappingError error) {
         throw new MappingError(error.getMessage() + " (at the key of a map)");
       }
 
       Object resultValue;
       try {
-        resultValue = convertType(entry.getValue(), genericTypes.get(1));
+        resultValue = this.convertType(entry.getValue(), genericTypes.get(1));
       } catch (MappingError error) {
+
         throw new MappingError(error.getMessage() + " (at value for key=" + resultKey + " of a map)");
       }
 
@@ -374,7 +396,10 @@ public class ConfigMapper implements IConfigMapper {
    * @param value Previously looked up value
    * @return Value to assign to the field
    */
-  private Object handleResolveListField(Field f, Object value) throws Exception {
+  private Object handleResolveListField(
+		final Field f,
+		final Object value
+	) throws Exception {
     logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "Resolving list field");
 
     List<Class<?>> genericTypes = getGenericTypes(f);
@@ -382,17 +407,16 @@ public class ConfigMapper implements IConfigMapper {
 
     List<Object> result = new ArrayList<>();
 
-    if (!(value instanceof List)) {
+    if (!(value instanceof final List<?> list)) {
       logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "Not a list, returning empty list");
       return result;
     }
 
-    List<?> list = (List<?>) value;
-    for (int i = 0; i < list.size(); i++) {
+		for (int i = 0; i < list.size(); i++) {
       Object itemValue;
       try {
         itemValue = convertType(list.get(i), genericTypes.get(0));
-      } catch (MappingError error) {
+      } catch (final MappingError error) {
         throw new MappingError(error.getMessage() + " (at index " + i + " of a list)");
       }
 
@@ -408,18 +432,20 @@ public class ConfigMapper implements IConfigMapper {
    * @param value Previously looked up value
    * @return Value to assign to the field
    */
-  private Object handleResolveArrayField(Field f, Object value) throws Exception {
+  private Object handleResolveArrayField(
+		final Field f,
+		final Object value
+	) throws Exception {
     logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "Resolving array field");
 
     Class<?> arrayType = f.getType().getComponentType();
 
-    if (!(value instanceof List)) {
+    if (!(value instanceof final List<?> list)) {
       logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "Not a list, returning empty array");
       return Array.newInstance(arrayType, 0);
     }
 
-    List<?> list = (List<?>) value;
-    Object array = Array.newInstance(arrayType, list.size());
+		Object array = Array.newInstance(arrayType, list.size());
 
     for (int i = 0; i < list.size(); i++) {
       Object itemValue;
@@ -443,13 +469,18 @@ public class ConfigMapper implements IConfigMapper {
    * @param f Field which has to be assigned to
    * @return Value to be assigned to the field
    */
-  private @Nullable Object resolveFieldValue(@Nullable String root, @Nullable Map<?, ?> source, Field f, Class<?> type) throws Exception {
+  private @Nullable Object resolveFieldValue(
+		final @Nullable String root,
+		final @Nullable Map<?, ?> source,
+		final Field f,
+		final Class<?> type
+	) throws Exception {
     String path = f.isAnnotationPresent(CSInlined.class) ? root : joinPaths(root, f.getName());
     boolean always = f.isAnnotationPresent(CSAlways.class) || f.getDeclaringClass().isAnnotationPresent(CSAlways.class);
 
     logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "Resolving value for field=" + f.getName() + " at path=" + path + " using source=" + source);
 
-    Object value = resolvePath(path, source);
+    final Object value = this.resolvePath(path, source);
 
     // It's not marked as always and the current path doesn't exist: return null
     if (!always && value == null) {
@@ -488,11 +519,14 @@ public class ConfigMapper implements IConfigMapper {
    * @param b Path B (or null/empty)
    * @return Path A joined with path B
    */
-  private String joinPaths(@Nullable String a, @Nullable String b) {
-    if (a == null || StringUtils.isBlank(a))
+  private String joinPaths(
+		final @Nullable String a,
+		final @Nullable String b
+	) {
+    if (a == null || a.isBlank())
       return b;
 
-    if (b == null || StringUtils.isBlank(b))
+    if (b == null || b.isBlank())
       return a;
 
     if (a.endsWith(".") && b.startsWith("."))
@@ -510,7 +544,9 @@ public class ConfigMapper implements IConfigMapper {
    * @param type Type of the target class
    * @return Default constructor
    */
-  private<T> Constructor<T> findDefaultConstructor(Class<T> type) {
+  private<T> Constructor<T> findDefaultConstructor(
+		final Class<T> type
+	) {
     try {
       Constructor<T> ctor = type.getDeclaredConstructor();
       ctor.setAccessible(true);
@@ -525,13 +561,15 @@ public class ConfigMapper implements IConfigMapper {
    * @param f Target field
    * @return List of generic fields, null if the field's type is not generic
    */
-  private @Nullable List<Class<?>> getGenericTypes(Field f) {
+  private @Nullable List<Class<?>> getGenericTypes(
+		final Field f
+	) {
     Type genericType = f.getGenericType();
 
-    if (!(genericType instanceof ParameterizedType))
+    if (!(genericType instanceof ParameterizedType parameterizedType))
       return null;
 
-    Type[] types = ((ParameterizedType) genericType).getActualTypeArguments();
+    Type[] types = parameterizedType.getActualTypeArguments();
     List<Class<?>> result = new ArrayList<>();
 
     for (Type type : types)
@@ -545,12 +583,14 @@ public class ConfigMapper implements IConfigMapper {
    * @param type Type to unwrap
    * @return Unwrapped type
    */
-  private Class<?> unwrapType(Type type) {
-    if (type instanceof Class)
-      return (Class<?>) type;
+  private Class<?> unwrapType(
+		final Type type
+	) {
+    if (type instanceof Class<?> clazzType)
+      return clazzType;
 
-    if (type instanceof ParameterizedType)
-      return unwrapType(((ParameterizedType) type).getRawType());
+    if (type instanceof ParameterizedType parameterizedType)
+      return this.unwrapType(parameterizedType.getRawType());
 
     throw new MappingError("Cannot unwrap type of class=" + type.getClass());
   }

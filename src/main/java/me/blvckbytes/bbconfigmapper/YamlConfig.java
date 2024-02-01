@@ -68,13 +68,18 @@ public class YamlConfig implements IConfig {
 
     DUMPER_OPTIONS = new DumperOptions();
     DUMPER_OPTIONS.setProcessComments(true);
+		DUMPER_OPTIONS.setAllowUnicode(true);
     DUMPER_OPTIONS.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
     DUMPER_OPTIONS.setAnchorGenerator(Node::getAnchor);
 
     YAML = new Yaml(new Constructor(loaderOptions), new Representer(DUMPER_OPTIONS), DUMPER_OPTIONS, loaderOptions);
   }
 
-  public YamlConfig(@Nullable IExpressionEvaluator evaluator, Logger logger, @Nullable String expressionMarkerSuffix) {
+  public YamlConfig(
+		final @Nullable IExpressionEvaluator evaluator,
+		final Logger logger,
+		final @Nullable String expressionMarkerSuffix
+	) {
     this.evaluator = evaluator;
     this.logger = logger;
     this.expressionMarkerSuffix = expressionMarkerSuffix;
@@ -189,7 +194,7 @@ public class YamlConfig implements IConfig {
   private void extractHeader() {
     List<NodeTuple> rootTuples = this.rootNode.getValue();
 
-    if (rootTuples.size() == 0) {
+    if (rootTuples.isEmpty()) {
       this.header = "";
       return;
     }
@@ -208,7 +213,7 @@ public class YamlConfig implements IConfig {
     boolean foundBlankLine = false;
     boolean foundBlockLine = false;
 
-    while (firstKeyBlockComments.size() > 0) {
+    while (! firstKeyBlockComments.isEmpty()) {
       CommentLine firstLine = firstKeyBlockComments.remove(0);
       CommentType type = firstLine.getCommentType();
       String value = firstLine.getValue();
@@ -243,7 +248,7 @@ public class YamlConfig implements IConfig {
   public void save(Writer writer) throws IOException {
     logger.log(Level.FINEST, () -> DebugLogSource.YAML + "Serializing the YAML root node to the provided writer");
 
-    if (this.rootNode == null || this.rootNode.getValue().size() == 0) {
+    if (this.rootNode == null || this.rootNode.getValue().isEmpty()) {
       writer.write("");
       return;
     }
@@ -254,15 +259,10 @@ public class YamlConfig implements IConfig {
 
   private void executeWhileMergedTuplesAbsent(Runnable executable) {
     synchronized (this.mergedTuples) {
-      for (Iterator<MergedNodeTuple> mergedTuplesIterator = this.mergedTuples.iterator(); mergedTuplesIterator.hasNext();) {
-        MergedNodeTuple mergedTuple = mergedTuplesIterator.next();
-
-        // If the remove routine yielded false, the element has no longer been in the list
-        // This means that somebody else removed it, and it thus should also not be added back later on
-        // Thus, remove it from the merged tuples list
-        if (!mergedTuple.removeRoutine.get())
-          mergedTuplesIterator.remove();
-      }
+			// If the remove routine yielded false, the element has no longer been in the list
+			// This means that somebody else removed it, and it thus should also not be added back later on
+			// Thus, remove it from the merged tuples list
+			this.mergedTuples.removeIf(mergedTuple -> ! mergedTuple.removeRoutine.get());
 
       executable.run();
 
@@ -414,7 +414,7 @@ public class YamlConfig implements IConfig {
     List<CommentLine> comments = new ArrayList<>();
 
     for (String line : lines) {
-      CommentType type = StringUtils.isBlank(line) ? CommentType.BLANK_LINE : CommentType.BLOCK;
+      CommentType type = line.isBlank() ? CommentType.BLANK_LINE : CommentType.BLOCK;
       comments.add(new CommentLine(null, null, line, type));
     }
 
@@ -465,7 +465,7 @@ public class YamlConfig implements IConfig {
       container = (MappingNode) locateNode(keyPath.substring(0, lastDotIndex), false, forceCreateMappings).a;
     }
 
-    if (container == null || StringUtils.isBlank(keyPart))
+    if (container == null || keyPart.isBlank())
       throw new IllegalArgumentException("Invalid path specified: " + keyPath);
 
     if (!keyPath.endsWith(keyPart))
@@ -605,7 +605,7 @@ public class YamlConfig implements IConfig {
     // Keys should never contain any whitespace
     path = path.trim();
 
-    if (StringUtils.isBlank(path))
+    if (path.isBlank())
       throw new IllegalArgumentException("Invalid path specified: " + path);
 
     Node node = rootNode;
@@ -623,11 +623,10 @@ public class YamlConfig implements IConfig {
       String pathPart = path.substring(beginIndex, endIndex);
 
       // Not a mapping node, cannot look up a path-part, the key has to be invalid
-      if (!(node instanceof MappingNode))
+      if (!(node instanceof final MappingNode mapping))
         return new Tuple<>(null, markedForExpressions);
 
-      MappingNode mapping = (MappingNode) node;
-      NodeTuple keyValueTuple = locateKey(mapping, pathPart);
+			NodeTuple keyValueTuple = locateKey(mapping, pathPart);
       boolean markedAlready = expressionMarkerSuffix != null && pathPart.endsWith(expressionMarkerSuffix);
 
       // The k-v tuple could not be located and isn't marked for expressions already
@@ -749,10 +748,9 @@ public class YamlConfig implements IConfig {
         Object key = unwrapNode(item.getKeyNode(), false);
 
         // If the key is a string, it might hold an attached marker which needs to be stripped off
-        if (key instanceof String) {
-          String keyS = (String) key;
+        if (key instanceof final String keyS) {
 
-          // Strip of trailing marker, also mark for expressions (if not marked already)
+					// Strip of trailing marker, also mark for expressions (if not marked already)
           if (expressionMarkerSuffix != null && keyS.endsWith(expressionMarkerSuffix)) {
             key = keyS.substring(0, keyS.length() - 1);
             isItemMarkedForExpressions = true;

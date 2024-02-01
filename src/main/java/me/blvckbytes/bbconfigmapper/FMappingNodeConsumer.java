@@ -30,6 +30,10 @@ import org.yaml.snakeyaml.nodes.ScalarNode;
 @FunctionalInterface
 public interface FMappingNodeConsumer {
 
-  void accept(MappingNode currentContainer, ScalarNode currentKey, MappingNode currentValue);
+  void accept(
+		final MappingNode currentContainer,
+		final ScalarNode currentKey,
+		final MappingNode currentValue
+	);
 
 }

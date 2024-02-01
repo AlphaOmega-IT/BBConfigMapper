@@ -32,6 +32,10 @@ interface FExtensionCandidateHandler {
   /**
    * Returns true if the tuple was missing and could be extended
    */
-  boolean apply(NodeTuple tuple, String pathOfTuple, int indexOfTuple);
+  boolean apply(
+		final NodeTuple tuple,
+		final String pathOfTuple,
+		final int indexOfTuple
+	);
 
 }

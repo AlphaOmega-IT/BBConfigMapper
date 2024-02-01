@@ -36,40 +36,58 @@ public class ConfigValue implements IEvaluable {
   protected final @Nullable Object value;
   private final @Nullable IExpressionEvaluator evaluator;
 
-  public ConfigValue(@Nullable Object value, @Nullable IExpressionEvaluator evaluator) {
+  public ConfigValue(
+		final @Nullable Object value,
+		final @Nullable IExpressionEvaluator evaluator
+	) {
     this.value = value;
     this.evaluator = evaluator;
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T> T asScalar(ScalarType type, IEvaluationEnvironment env) {
-    return (T) interpret(value, type.getType(), null, env);
+  public <T> T asScalar(
+		final ScalarType type,
+		final IEvaluationEnvironment env
+	) {
+    return (T) this.interpret(value, type.getType(), null, env);
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T> List<T> asList(ScalarType type, IEvaluationEnvironment env) {
-    return (List<T>) interpret(value, List.class, new ScalarType[] { type }, env);
+  public <T> List<T> asList(
+		final ScalarType type,
+		final IEvaluationEnvironment env
+	) {
+    return (List<T>) this.interpret(value, List.class, new ScalarType[] { type }, env);
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T> Set<T> asSet(ScalarType type, IEvaluationEnvironment env) {
-    return (Set<T>) interpret(value, Set.class, new ScalarType[] { type }, env);
+  public <T> Set<T> asSet(
+		final ScalarType type,
+		final IEvaluationEnvironment env
+	) {
+    return (Set<T>) this.interpret(value, Set.class, new ScalarType[] { type }, env);
   }
 
   @Override
-  public Object asRawObject(IEvaluationEnvironment env) {
-    if (value instanceof AExpression && this.evaluator != null)
-      return this.evaluator.evaluateExpression((AExpression) value, env);
+  public Object asRawObject(
+		final IEvaluationEnvironment env
+	) {
+    if (value instanceof AExpression aExpressionValue && this.evaluator != null)
+      return this.evaluator.evaluateExpression(aExpressionValue, env);
     return value;
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T, U> Map<T, U> asMap(ScalarType key, ScalarType value, IEvaluationEnvironment env) {
-    return (Map<T, U>) interpret(value, Map.class, new ScalarType[] { key, value }, env);
+  public <T, U> Map<T, U> asMap(
+		final ScalarType key,
+		final ScalarType value,
+		final IEvaluationEnvironment env
+	) {
+    return (Map<T, U>) this.interpret(value, Map.class, new ScalarType[] { key, value }, env);
   }
 
   /**
@@ -82,15 +100,19 @@ public class ConfigValue implements IEvaluable {
    * @return Guaranteed non-Null value of the requested type
    */
   @SuppressWarnings("unchecked")
-  protected <T> T interpretScalar(@Nullable Object input, ScalarType type, IEvaluationEnvironment env) {
+  protected <T> T interpretScalar(
+		@Nullable Object input,
+		final ScalarType type,
+		final IEvaluationEnvironment env
+	) {
     Class<?> typeClass = type.getType();
 
     if (typeClass.isInstance(input))
       return (T) input;
 
     // The input is an expression which needs to be evaluated first
-    if (input instanceof AExpression && this.evaluator != null)
-      input = this.evaluator.evaluateExpression((AExpression) input, env);
+    if (input instanceof AExpression aExpressionInput && this.evaluator != null)
+      input = this.evaluator.evaluateExpression(aExpressionInput, env);
 
     return (T) type.getInterpreter().apply(input, env);
   }
@@ -108,10 +130,14 @@ public class ConfigValue implements IEvaluable {
    * @return Guaranteed non-null value of the requested type
    */
   @SuppressWarnings("unchecked")
-  private<T> T interpret(@Nullable Object input, Class<T> type, @Nullable ScalarType[] genericTypes, IEvaluationEnvironment env) {
+  private<T> T interpret(
+		@Nullable Object input,
+		final Class<T> type,
+		final @Nullable ScalarType[] genericTypes,
+		final IEvaluationEnvironment env) {
 
-    if (input instanceof AExpression && this.evaluator != null)
-      input = this.evaluator.evaluateExpression((AExpression) input, env);
+    if (input instanceof AExpression aExpressionInput && this.evaluator != null)
+      input = this.evaluator.evaluateExpression(aExpressionInput, env);
 
     if (type == List.class || type == Set.class) {
 
@@ -121,10 +147,10 @@ public class ConfigValue implements IEvaluable {
       Collection<?> items;
 
       // Turn a scalar value into a list, if applicable
-      if (!(input instanceof Collection))
+      if (!(input instanceof Collection<?> collection))
         items = Collections.singletonList(interpretScalar(input, genericTypes[0], env));
       else
-        items = (Collection<?>) input;
+        items = collection;
 
       Collection<Object> results;
 
@@ -139,11 +165,11 @@ public class ConfigValue implements IEvaluable {
         // FIXME: This seems hella repetitive to #interpretScalar
 
         // Expression result collections are flattened into the return result collection, if applicable
-        if (item instanceof AExpression && this.evaluator != null) {
-          Object result = this.evaluator.evaluateExpression((AExpression) item, env);
+        if (item instanceof AExpression aExpressionItem && this.evaluator != null) {
+          Object result = this.evaluator.evaluateExpression(aExpressionItem, env);
 
-          if (result instanceof Collection) {
-            for (Object subItem : (Collection<?>) result)
+          if (result instanceof Collection<?> collectionResult) {
+            for (final Object subItem : collectionResult)
               results.add(genericTypes[0].getInterpreter().apply(subItem, env));
 
             continue;
@@ -153,7 +179,7 @@ public class ConfigValue implements IEvaluable {
           continue;
         }
 
-        results.add(interpretScalar(item, genericTypes[0], env));
+        results.add(this.interpretScalar(item, genericTypes[0], env));
       }
 
       return (T) results;
@@ -169,25 +195,23 @@ public class ConfigValue implements IEvaluable {
       if (input == null)
         return (T) new HashMap<>();
 
-      if (!(input instanceof Map))
+      if (!(input instanceof Map<?, ?> mapInput))
         throw new IllegalStateException("Cannot transform type " + input.getClass().getName() + " into a map");
 
-      Map<?, ?> items = (Map<?, ?>) input;
-      Map<Object, Object> results = new HashMap<>();
+			Map<Object, Object> results = new HashMap<>();
 
       // Interpret each value as the requested generic type
-      for (Map.Entry<?, ?> entry : items.entrySet())
+      for (final Map.Entry<?, ?> entry : mapInput.entrySet())
         results.put(interpretScalar(entry.getKey(), genericTypes[0], env), interpretScalar(entry.getValue(), genericTypes[1], env));
 
       return (T) results;
     }
 
-    ScalarType scalarType = ScalarType.fromClass(type);
-
+    final ScalarType scalarType = ScalarType.fromClass(type);
     if (scalarType == null)
       throw new IllegalStateException("Unknown scalar type provided: " + type);
 
-    return interpretScalar(input, scalarType, env);
+    return this.interpretScalar(input, scalarType, env);
   }
 
   @Override
