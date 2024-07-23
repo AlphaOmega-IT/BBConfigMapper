@@ -1,4 +1,0 @@
-connection:
-  database: config_mapper
-  username: root
-  password: abc123

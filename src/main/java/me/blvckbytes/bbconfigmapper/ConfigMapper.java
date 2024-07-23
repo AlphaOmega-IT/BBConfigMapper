@@ -354,7 +354,7 @@ public class ConfigMapper implements IConfigMapper {
     logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "Resolving map field");
 
     List<Class<?>> genericTypes = getGenericTypes(f);
-    assert genericTypes != null && genericTypes.size() == 2;
+  //assert genericTypes != null && genericTypes.size() == 2;
 
     Map<Object, Object> result = new HashMap<>();
 
@@ -403,7 +403,7 @@ public class ConfigMapper implements IConfigMapper {
     logger.log(Level.FINEST, () -> DebugLogSource.MAPPER + "Resolving list field");
 
     List<Class<?>> genericTypes = getGenericTypes(f);
-    assert genericTypes != null && genericTypes.size() == 1;
+  //assert genericTypes != null && genericTypes.size() == 1;
 
     List<Object> result = new ArrayList<>();
 

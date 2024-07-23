@@ -1,6 +1,0 @@
-type: throwable
-mainEffect:
-  - 1
-  - 2
-  - 3
-  - 4

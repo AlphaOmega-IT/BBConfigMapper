@@ -70,6 +70,7 @@ public class YamlConfig implements IConfig {
     DUMPER_OPTIONS.setProcessComments(true);
 		DUMPER_OPTIONS.setAllowUnicode(true);
     DUMPER_OPTIONS.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+		DUMPER_OPTIONS.setPrettyFlow(true);
     DUMPER_OPTIONS.setAnchorGenerator(Node::getAnchor);
 
     YAML = new Yaml(new Constructor(loaderOptions), new Representer(DUMPER_OPTIONS), DUMPER_OPTIONS, loaderOptions);
@@ -199,7 +200,7 @@ public class YamlConfig implements IConfig {
       return;
     }
 
-    Node firstKey = rootTuples.get(0).getKeyNode();
+    Node firstKey = rootTuples.getFirst().getKeyNode();
     List<CommentLine> firstKeyBlockComments = firstKey.getBlockComments();
 
     if (firstKeyBlockComments == null) {
@@ -214,7 +215,7 @@ public class YamlConfig implements IConfig {
     boolean foundBlockLine = false;
 
     while (! firstKeyBlockComments.isEmpty()) {
-      CommentLine firstLine = firstKeyBlockComments.remove(0);
+      CommentLine firstLine = firstKeyBlockComments.removeFirst();
       CommentType type = firstLine.getCommentType();
       String value = firstLine.getValue();
 
@@ -584,7 +585,7 @@ public class YamlConfig implements IConfig {
    */
   private NodeTuple createNewTuple(@Nullable Node keyNode, @Nullable String key, Node value) {
     if (keyNode == null) {
-      assert key != null;
+    //assert key != null;
       keyNode = new ScalarNode(Tag.STR, key, null, null, DumperOptions.ScalarStyle.PLAIN);
     }
 

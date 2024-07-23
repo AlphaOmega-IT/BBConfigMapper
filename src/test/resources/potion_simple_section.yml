@@ -1,5 +1,0 @@
-type: throwable
-mainEffect:
-  effect: damage
-  duration: 120
-  amplifier: 2
