@@ -5,6 +5,14 @@
 ![build](https://github.com/BlvckBytes/BBConfigMapper/actions/workflows/build.yml/badge.svg)
 [![coverage](https://codecov.io/gh/BlvckBytes/BBConfigMapper/branch/main/graph/badge.svg?token=SDSITT1P18)](https://codecov.io/gh/BlvckBytes/BBConfigMapper)
 
+```xml
+  <dependency>
+    <groupId>de.alphaomega-it.bbconfigmapper</groupId>
+    <artifactId>BBConfigMapper</artifactId>
+    <version>1.0</version>
+  </dependency>
+```
+
 An object mapper for key-based configurations making use of [GPEEE](https://github.com/BlvckBytes/GPEEE).
 
 ## Table of Contents
