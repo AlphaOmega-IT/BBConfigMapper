@@ -6,7 +6,7 @@
 
     <groupId>de.alphaomega-it.bbconfigmapper</groupId>
     <artifactId>BBConfigMapper</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 		<name >BBConfigMapper</name >
 		<description >BBConfigMapper</description >
 		<url>https://github.com/AlphaOmega-IT/BBConfigMapper</url>
@@ -49,15 +49,9 @@
     <dependencies>
         <!-- Expression evaluator -->
         <dependency>
-            <groupId>me.blvckbytes</groupId>
+            <groupId>de.alphaomega-it.gpeee</groupId>
             <artifactId>GPEEE</artifactId>
-            <version>0.1</version>
-	        <exclusions >
-		        <exclusion >
-			        <groupId >net.kyori</groupId >
-			        <artifactId >adventure-text-minimessage</artifactId >
-		        </exclusion >
-	        </exclusions >
+            <version>1.0</version>
         </dependency>
 
         <!-- The latest SnakeYAML parser to allow for proper comment handling -->
@@ -65,13 +59,6 @@
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
             <version>2.2</version>
-        </dependency>
-
-        <!-- TextComponents for Minecraft -->
-        <dependency>
-            <groupId>net.kyori</groupId>
-            <artifactId>adventure-text-minimessage</artifactId>
-            <version>4.17.0</version>
         </dependency>
     </dependencies>
 	
