@@ -39,7 +39,7 @@ public enum ScalarType {
   DOUBLE(double.class, (i, e) -> e.getValueInterpreter().asDouble(i)),
   BOOLEAN(boolean.class, (i, e) -> e.getValueInterpreter().asBoolean(i)),
   STRING(String.class, (i, e) -> e.getValueInterpreter().asString(i)),
-	TEXT_COMPONENT(Component.class, (i, e) -> Component.text(e.getValueInterpreter().asString(i)))
+  TEXT_COMPONENT(Component.class, (i, e) -> Component.text(e.getValueInterpreter().asString(i)))
   ;
 
   private final Class<?> type;
@@ -58,7 +58,7 @@ public enum ScalarType {
     lookupTable.put(boolean.class, BOOLEAN);
     lookupTable.put(Boolean.class, BOOLEAN);
     lookupTable.put(String.class, STRING);
-		lookupTable.put(Component.class, TEXT_COMPONENT);
+    lookupTable.put(Component.class, TEXT_COMPONENT);
   }
 
   ScalarType(Class<?> type, BiFunction<@Nullable Object, IEvaluationEnvironment, Object> interpreter) {

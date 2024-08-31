@@ -51,7 +51,7 @@
         <dependency>
             <groupId>de.alphaomega-it.gpeee</groupId>
             <artifactId>GPEEE</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
         </dependency>
 
         <!-- The latest SnakeYAML parser to allow for proper comment handling -->

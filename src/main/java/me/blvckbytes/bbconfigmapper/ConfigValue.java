@@ -117,102 +117,78 @@ public class ConfigValue implements IEvaluable {
     return (T) type.getInterpreter().apply(input, env);
   }
 
-  // FIXME: The following method could really use some attention...
+    /**
+     * Interpret a nullable input value based on the specified type and generic types.
+     * Handles conversion to lists, sets, and maps as required.
+     * @param input Nullable value input
+     * @param type Required result type
+     * @param genericTypes Scalar types of a list/map (null for scalar requests)
+     * @param env Environment used for interpretation and evaluation
+     * @return Result of the interpretation based on the specified type
+     */
+    private <T> T interpret(
+            @Nullable Object input,
+            final Class<T> type,
+            final @Nullable ScalarType[] genericTypes,
+            final IEvaluationEnvironment env) {
 
-  /**
-   * Interpret a nullable input value as a scalar, list or map configuration
-   * value by making use of {@link #interpretScalar} to either convert to a scalar
-   * value or to convert list items / map values to the requested scalar type before responding.
-   * @param input Nullable value input
-   * @param type Required result type
-   * @param genericTypes Scalar types of a list/map (null for scalar requests)
-   * @param env Environment used to interpret and evaluate with
-   * @return Guaranteed non-null value of the requested type
-   */
-  @SuppressWarnings("unchecked")
-  private<T> T interpret(
-		@Nullable Object input,
-		final Class<T> type,
-		final @Nullable ScalarType[] genericTypes,
-		final IEvaluationEnvironment env) {
-
-    if (input instanceof AExpression aExpressionInput && this.evaluator != null)
-      input = this.evaluator.evaluateExpression(aExpressionInput, env);
-
-    if (type == List.class || type == Set.class) {
-
-      if (genericTypes == null || genericTypes.length < 1 || genericTypes[0] == null)
-        throw new IllegalStateException("Cannot require a List without specifying a generic type");
-
-      Collection<?> items;
-
-      // Turn a scalar value into a list, if applicable
-      if (!(input instanceof Collection<?> collection))
-        items = Collections.singletonList(interpretScalar(input, genericTypes[0], env));
-      else
-        items = collection;
-
-      Collection<Object> results;
-
-      if (type == List.class)
-        results = new ArrayList<>();
-      else
-        results = new HashSet<>();
-
-      // Interpret each item as the requested generic type
-      for (Object item : items) {
-
-        // FIXME: This seems hella repetitive to #interpretScalar
-
-        // Expression result collections are flattened into the return result collection, if applicable
-        if (item instanceof AExpression aExpressionItem && this.evaluator != null) {
-          Object result = this.evaluator.evaluateExpression(aExpressionItem, env);
-
-          if (result instanceof Collection<?> collectionResult) {
-            for (final Object subItem : collectionResult)
-              results.add(genericTypes[0].getInterpreter().apply(subItem, env));
-
-            continue;
-          }
-
-          results.add(genericTypes[0].getInterpreter().apply(result, env));
-          continue;
+        // Evaluate expression if input is an AExpression and evaluator is available
+        if (input instanceof AExpression aExpressionInput && this.evaluator != null) {
+            input = this.evaluator.evaluateExpression(aExpressionInput, env);
         }
 
-        results.add(this.interpretScalar(item, genericTypes[0], env));
-      }
+        if (List.class.isAssignableFrom(type) || Set.class.isAssignableFrom(type)) {
+            if (genericTypes == null || genericTypes.length < 1 || genericTypes[0] == null) {
+                throw new IllegalArgumentException("A List/Set requires specifying a generic type");
+            }
 
-      return (T) results;
+            Collection<?> items = (input instanceof Collection<?> collection) ? collection : List.of(interpretScalar(input, genericTypes[0], env));
+
+            Collection<Object> results = (type == List.class) ? new ArrayList<>() : new HashSet<>();
+
+            for (Object item : items) {
+                Object result = (item instanceof AExpression aExpressionItem && this.evaluator != null) ?
+                        this.evaluator.evaluateExpression(aExpressionItem, env) : item;
+
+                if (result instanceof Collection<?> collectionResult) {
+                    collectionResult.forEach(subItem -> results.add(genericTypes[0].getInterpreter().apply(subItem, env)));
+                } else {
+                    results.add(genericTypes[0].getInterpreter().apply(result, env));
+                }
+            }
+
+            return (T) results;
+        }
+
+        if (Map.class.isAssignableFrom(type)) {
+            if (genericTypes == null || genericTypes.length < 2 || genericTypes[0] == null || genericTypes[1] == null) {
+                throw new IllegalArgumentException("A Map requires specifying two generic types");
+            }
+
+            if (input == null) {
+                return (T) Collections.emptyMap();
+            }
+
+            if (!(input instanceof Map<?, ?> mapInput)) {
+                throw new IllegalArgumentException("Cannot transform type " + input.getClass().getName() + " into a map");
+            }
+
+            Map<Object, Object> results = new HashMap<>();
+
+            for (Map.Entry<?, ?> entry : mapInput.entrySet()) {
+                results.put(interpretScalar(entry.getKey(), genericTypes[0], env), interpretScalar(entry.getValue(), genericTypes[1], env));
+            }
+
+            return (T) results;
+        }
+
+        ScalarType scalarType = ScalarType.fromClass(type);
+        if (scalarType == null) {
+            throw new IllegalArgumentException("Unknown scalar type provided: " + type);
+        }
+
+        return this.interpretScalar(input, scalarType, env);
     }
-
-    if (type == Map.class) {
-
-      if (genericTypes == null || genericTypes.length < 2 || genericTypes[0] == null || genericTypes[1] == null) {
-        throw new IllegalStateException("Cannot require a Map without specifying generic types");
-      }
-
-      // Null will just be the empty map
-      if (input == null)
-        return (T) new HashMap<>();
-
-      if (!(input instanceof Map<?, ?> mapInput))
-        throw new IllegalStateException("Cannot transform type " + input.getClass().getName() + " into a map");
-
-			Map<Object, Object> results = new HashMap<>();
-
-      // Interpret each value as the requested generic type
-      for (final Map.Entry<?, ?> entry : mapInput.entrySet())
-        results.put(interpretScalar(entry.getKey(), genericTypes[0], env), interpretScalar(entry.getValue(), genericTypes[1], env));
-
-      return (T) results;
-    }
-
-    final ScalarType scalarType = ScalarType.fromClass(type);
-    if (scalarType == null)
-      throw new IllegalStateException("Unknown scalar type provided: " + type);
-
-    return this.interpretScalar(input, scalarType, env);
-  }
 
   @Override
   public String toString() {
