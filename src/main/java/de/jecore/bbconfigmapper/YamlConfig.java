@@ -40,54 +40,67 @@ import org.yaml.snakeyaml.representer.Representer;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Handles YAML configuration operations and allows overwriting parts of a new file if keys are added.
+ */
 public class YamlConfig implements IConfig {
-
-  /*
-    TODO: Add more debug logging calls to capture all details
+  
+  /**
+   * Initializes the YAML parser and sets up options.
    */
-
   private static final Yaml YAML;
   private static final DumperOptions DUMPER_OPTIONS;
-
+  
   private final @Nullable IExpressionEvaluator evaluator;
   private final Logger logger;
   private final @Nullable String expressionMarkerSuffix;
   private final Map<MappingNode, Map<String, @Nullable NodeTuple>> locateKeyCache;
   private final List<MergedNodeTuple> mergedTuples;
-
+  
   private MappingNode rootNode;
   private String header;
-
+  
   static {
     LoaderOptions loaderOptions = new LoaderOptions();
     loaderOptions.setProcessComments(true);
     loaderOptions.setAllowDuplicateKeys(true);
-
+    
     DUMPER_OPTIONS = new DumperOptions();
     DUMPER_OPTIONS.setProcessComments(true);
-		DUMPER_OPTIONS.setAllowUnicode(true);
+    DUMPER_OPTIONS.setAllowUnicode(true);
     DUMPER_OPTIONS.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-		DUMPER_OPTIONS.setPrettyFlow(true);
+    DUMPER_OPTIONS.setPrettyFlow(true);
     DUMPER_OPTIONS.setAnchorGenerator(Node::getAnchor);
-
+    
     YAML = new Yaml(new Constructor(loaderOptions), new Representer(DUMPER_OPTIONS), DUMPER_OPTIONS, loaderOptions);
   }
-
+  
+  /**
+   * Constructs a new YamlConfig instance.
+   * @param evaluator The expression evaluator
+   * @param logger The logger
+   * @param expressionMarkerSuffix The suffix for expressions
+   */
   public YamlConfig(
-		final @Nullable IExpressionEvaluator evaluator,
-		final Logger logger,
-		final @Nullable String expressionMarkerSuffix
-	) {
+      final @Nullable IExpressionEvaluator evaluator,
+      final Logger logger,
+      final @Nullable String expressionMarkerSuffix
+  ) {
     this.evaluator = evaluator;
     this.logger = logger;
     this.expressionMarkerSuffix = expressionMarkerSuffix;
     this.locateKeyCache = new HashMap<>();
     this.mergedTuples = new ArrayList<>();
   }
-
+  
+  /**
+   * Loads the YAML configuration from a reader.
+   * @param reader The reader containing YAML data
+   */
   public void load(Reader reader) {
     Iterator<Node> nodes = YAML.composeAll(reader).iterator();
 
@@ -271,7 +284,7 @@ public class YamlConfig implements IConfig {
         mergedTuple.addRoutine.run();
     }
   }
-
+  
   /**
    * Extends keys which the provided config contains but are absent on this instance
    * by copying over the values those keys hold
@@ -279,27 +292,45 @@ public class YamlConfig implements IConfig {
    * @return Number of updated keys
    */
   public int extendMissingKeys(YamlConfig other) {
-    if (other.rootNode == null)
+    if (other.rootNode == null) {
       throw new IllegalStateException("Other config has not yet been loaded");
-
+    }
+    
+    AtomicInteger updatedKeys = new AtomicInteger();
+    
     return forEachKeyPathRecursively(other.rootNode, null, (tuple, pathOfTuple, indexOfTuple) -> {
-      if (this.exists(pathOfTuple))
+      if (this.exists(pathOfTuple)) {
+        // Key already exists, no need to extend
         return false;
-
+      }
+      
       MappingNode container = locateContainerNode(pathOfTuple, true).a;
       List<NodeTuple> containerTuples = container.getValue();
       String key = ((ScalarNode) tuple.getKeyNode()).getValue();
-
-      // The new key is at an index which doesn't yet exist, add to the end of the tuple list
-      if (indexOfTuple >= containerTuples.size()) {
-        containerTuples.add(tuple);
-        invalidateLocateKeyCacheFor(container, key);
-        return true;
+      
+      // Check if the key already exists in the container
+      boolean keyExists = false;
+      for (NodeTuple nodeTuple : containerTuples) {
+        if (nodeTuple.getKeyNode() instanceof ScalarNode &&
+            ((ScalarNode) nodeTuple.getKeyNode()).getValue().equals(key)) {
+          keyExists = true;
+          break;
+        }
       }
-
-      // Insert the new tuple at the right index
-      containerTuples.add(indexOfTuple, tuple);
-      invalidateLocateKeyCacheFor(container, key);
+      
+      if (!keyExists) {
+        // The new key is at an index which doesn't yet exist, add to the end of the tuple list
+        if (indexOfTuple >= containerTuples.size()) {
+          containerTuples.add(tuple);
+        } else {
+          // Insert the new tuple at the right index
+          containerTuples.add(indexOfTuple, tuple);
+        }
+        
+        invalidateLocateKeyCacheFor(container, key);
+        updatedKeys.getAndIncrement();
+      }
+      
       return true;
     });
   }
@@ -627,7 +658,7 @@ public class YamlConfig implements IConfig {
       if (!(node instanceof final MappingNode mapping))
         return new Tuple<>(null, markedForExpressions);
 
-			NodeTuple keyValueTuple = locateKey(mapping, pathPart);
+      NodeTuple keyValueTuple = locateKey(mapping, pathPart);
       boolean markedAlready = expressionMarkerSuffix != null && pathPart.endsWith(expressionMarkerSuffix);
 
       // The k-v tuple could not be located and isn't marked for expressions already
@@ -751,7 +782,7 @@ public class YamlConfig implements IConfig {
         // If the key is a string, it might hold an attached marker which needs to be stripped off
         if (key instanceof final String keyS) {
 
-					// Strip of trailing marker, also mark for expressions (if not marked already)
+          // Strip of trailing marker, also mark for expressions (if not marked already)
           if (expressionMarkerSuffix != null && keyS.endsWith(expressionMarkerSuffix)) {
             key = keyS.substring(0, keyS.length() - 1);
             isItemMarkedForExpressions = true;
