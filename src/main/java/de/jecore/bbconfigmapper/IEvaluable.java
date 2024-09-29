@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package me.blvckbytes.bbconfigmapper;
+package de.jecore.bbconfigmapper;
 
 import me.blvckbytes.gpeee.interpreter.IEvaluationEnvironment;
 

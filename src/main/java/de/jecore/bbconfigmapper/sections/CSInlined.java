@@ -22,20 +22,13 @@
  * SOFTWARE.
  */
 
-package me.blvckbytes.bbconfigmapper;
+package de.jecore.bbconfigmapper.sections;
 
-import org.yaml.snakeyaml.nodes.NodeTuple;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@FunctionalInterface
-interface FExtensionCandidateHandler {
-
-  /**
-   * Returns true if the tuple was missing and could be extended
-   */
-  boolean apply(
-		final NodeTuple tuple,
-		final String pathOfTuple,
-		final int indexOfTuple
-	);
-
-}
+@Target({ ElementType.FIELD, ElementType.TYPE })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface CSInlined {}

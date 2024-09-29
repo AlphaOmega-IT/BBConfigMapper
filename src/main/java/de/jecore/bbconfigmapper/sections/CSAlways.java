@@ -22,11 +22,13 @@
  * SOFTWARE.
  */
 
-package me.blvckbytes.bbconfigmapper;
+package de.jecore.bbconfigmapper.sections;
 
-public class MappingError extends RuntimeException {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-  public MappingError(String message) {
-    super(message);
-  }
-}
+@Target({ ElementType.FIELD, ElementType.TYPE })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface CSAlways {}

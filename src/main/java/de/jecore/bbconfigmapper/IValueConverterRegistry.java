@@ -22,18 +22,14 @@
  * SOFTWARE.
  */
 
-package me.blvckbytes.bbconfigmapper;
+package de.jecore.bbconfigmapper;
 
-import org.yaml.snakeyaml.nodes.MappingNode;
-import org.yaml.snakeyaml.nodes.ScalarNode;
+import org.jetbrains.annotations.Nullable;
 
-@FunctionalInterface
-public interface FMappingNodeConsumer {
+public interface IValueConverterRegistry {
 
-  void accept(
-		final MappingNode currentContainer,
-		final ScalarNode currentKey,
-		final MappingNode currentValue
-	);
+  @Nullable Class<?> getRequiredTypeFor(Class<?> type);
+
+  @Nullable FValueConverter getConverterFor(Class<?> type);
 
 }

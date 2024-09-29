@@ -22,16 +22,13 @@
  * SOFTWARE.
  */
 
-package me.blvckbytes.bbconfigmapper;
+package de.jecore.bbconfigmapper.sections;
 
-import me.blvckbytes.gpeee.IExpressionEvaluator;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@FunctionalInterface
-public interface FValueConverter {
-
-  Object apply(
-		final Object value,
-		final IExpressionEvaluator evaluator
-	);
-
-}
+@Target({ ElementType.FIELD })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface CSIgnore {}

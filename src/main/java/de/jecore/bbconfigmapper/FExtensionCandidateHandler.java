@@ -22,14 +22,20 @@
  * SOFTWARE.
  */
 
-package me.blvckbytes.bbconfigmapper;
+package de.jecore.bbconfigmapper;
 
-import org.jetbrains.annotations.Nullable;
+import org.yaml.snakeyaml.nodes.NodeTuple;
 
-public interface IValueConverterRegistry {
+@FunctionalInterface
+interface FExtensionCandidateHandler {
 
-  @Nullable Class<?> getRequiredTypeFor(Class<?> type);
-
-  @Nullable FValueConverter getConverterFor(Class<?> type);
+  /**
+   * Returns true if the tuple was missing and could be extended
+   */
+  boolean apply(
+		final NodeTuple tuple,
+		final String pathOfTuple,
+		final int indexOfTuple
+	);
 
 }

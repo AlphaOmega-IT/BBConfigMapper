@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package me.blvckbytes.bbconfigmapper;
+package de.jecore.bbconfigmapper;
 
 import org.jetbrains.annotations.Nullable;
 

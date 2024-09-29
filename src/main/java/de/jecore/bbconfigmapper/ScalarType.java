@@ -22,13 +22,12 @@
  * SOFTWARE.
  */
 
-package me.blvckbytes.bbconfigmapper;
+package de.jecore.bbconfigmapper;
 
 import me.blvckbytes.gpeee.interpreter.IEvaluationEnvironment;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;

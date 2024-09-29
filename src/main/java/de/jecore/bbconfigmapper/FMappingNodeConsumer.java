@@ -22,39 +22,18 @@
  * SOFTWARE.
  */
 
-package me.blvckbytes.bbconfigmapper.sections;
+package de.jecore.bbconfigmapper;
 
-import org.jetbrains.annotations.Nullable;
+import org.yaml.snakeyaml.nodes.MappingNode;
+import org.yaml.snakeyaml.nodes.ScalarNode;
 
-import java.lang.reflect.Field;
-import java.util.List;
+@FunctionalInterface
+public interface FMappingNodeConsumer {
 
-public interface IConfigSection {
-
-  /**
-   * Called to decide the type of Object fields at runtime,
-   * based on previously parsed values of that instance, as
-   * it's patched one field at a time. Decidable fields are
-   * always read last, so that they have access to other,
-   * known type fields in order to decide properly.
-   * @param field Target field in question
-   * @return Decided type, Object.class means skip
-   */
-  default @Nullable Class<?> runtimeDecide(String field) { return null; }
-
-  /**
-   * Called when a field wasn't found within the config and a default could be set
-   * @param field Target field
-   * @return Value to use as a default
-   */
-  default @Nullable Object defaultFor(Field field) throws Exception {
-    return null;
-  }
-
-  /**
-   * Called when parsing of the section is completed
-   * and no more changes will be applied
-   */
-  default void afterParsing(List<Field> fields) throws Exception {}
+  void accept(
+		final MappingNode currentContainer,
+		final ScalarNode currentKey,
+		final MappingNode currentValue
+	);
 
 }

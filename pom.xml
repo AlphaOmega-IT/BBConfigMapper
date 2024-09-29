@@ -2,15 +2,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
 
+    <modelVersion>4.0.0</modelVersion>
     <groupId>de.alphaomega-it.bbconfigmapper</groupId>
     <artifactId>BBConfigMapper</artifactId>
-    <version>1.1</version>
-		<name >BBConfigMapper</name >
-		<description >BBConfigMapper</description >
-		<url>https://github.com/AlphaOmega-IT/BBConfigMapper</url>
-		<packaging>jar</packaging>
+    <version>1.5</version>
+    <name >BBConfigMapper</name >
+    <description >BBConfigMapper</description >
+    <url>https://github.com/AlphaOmega-IT/BBConfigMapper</url>
+    <packaging>jar</packaging>
 	
 	<developers>
 		<developer>
@@ -47,11 +47,11 @@
 	</scm>
 
     <dependencies>
-        <!-- Expression evaluator -->
         <dependency>
             <groupId>de.alphaomega-it.gpeee</groupId>
             <artifactId>GPEEE</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
+            <scope>compile</scope>
         </dependency>
 
         <!-- The latest SnakeYAML parser to allow for proper comment handling -->
@@ -59,6 +59,7 @@
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
             <version>2.2</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 	
@@ -67,7 +68,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>2.2.1</version>
+				<version>3.3.1</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>

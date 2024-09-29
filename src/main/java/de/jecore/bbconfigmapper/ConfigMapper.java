@@ -22,10 +22,13 @@
  * SOFTWARE.
  */
 
-package me.blvckbytes.bbconfigmapper;
+package de.jecore.bbconfigmapper;
 
-import me.blvckbytes.bbconfigmapper.logging.DebugLogSource;
-import me.blvckbytes.bbconfigmapper.sections.*;
+import de.jecore.bbconfigmapper.logging.DebugLogSource;
+import de.jecore.bbconfigmapper.sections.CSAlways;
+import de.jecore.bbconfigmapper.sections.CSIgnore;
+import de.jecore.bbconfigmapper.sections.CSInlined;
+import de.jecore.bbconfigmapper.sections.IConfigSection;
 import me.blvckbytes.gpeee.GPEEE;
 import me.blvckbytes.gpeee.IExpressionEvaluator;
 import me.blvckbytes.gpeee.Tuple;

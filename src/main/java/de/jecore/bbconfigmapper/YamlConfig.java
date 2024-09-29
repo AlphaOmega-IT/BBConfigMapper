@@ -22,9 +22,9 @@
  * SOFTWARE.
  */
 
-package me.blvckbytes.bbconfigmapper;
+package de.jecore.bbconfigmapper;
 
-import me.blvckbytes.bbconfigmapper.logging.DebugLogSource;
+import de.jecore.bbconfigmapper.logging.DebugLogSource;
 import me.blvckbytes.gpeee.IExpressionEvaluator;
 import me.blvckbytes.gpeee.Tuple;
 import org.jetbrains.annotations.NotNull;

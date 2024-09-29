@@ -22,21 +22,26 @@
  * SOFTWARE.
  */
 
-package me.blvckbytes.bbconfigmapper;
+package de.jecore.bbconfigmapper;
 
-import org.yaml.snakeyaml.nodes.NodeTuple;
+import de.jecore.bbconfigmapper.sections.IConfigSection;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.function.Supplier;
+public interface IConfigMapper {
 
-public class MergedNodeTuple {
+  /**
+   * Creates an empty instance of the provided type by invoking the default-constructor
+   * and then traverses it's fields to assign them one after the other with available
+   * configuration values while making use of the decision methods within {@link IConfigSection}
+   * @param root Root node of this section (null means config root)
+   * @param type Type of the class to map
+   * @return Mapped instance of specified type
+   */
+  <T extends IConfigSection> T mapSection(@Nullable String root, Class<T> type) throws Exception;
 
-  public final NodeTuple handle;
-  public final Runnable addRoutine;
-  public final Supplier<Boolean> removeRoutine;
+  /**
+   * Get the underlying configuration instance
+   */
+  IConfig getConfig();
 
-  public MergedNodeTuple(NodeTuple handle, Runnable addRoutine, Supplier<Boolean> removeRoutine) {
-    this.handle = handle;
-    this.addRoutine = addRoutine;
-    this.removeRoutine = removeRoutine;
-  }
 }
